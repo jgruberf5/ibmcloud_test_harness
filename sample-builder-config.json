@@ -1,0 +1,25 @@
+{
+    "active_zones": [
+        "us-south-1",
+        "us-south-2",
+        "us-south-3",
+        "us-east-1",
+        "us-east-2",
+        "us-east-3",
+        "eu-de-1",
+        "eu-de-2",
+        "eu-de-3",
+        "eu-gb-1",
+        "eu-gb-2",
+        "eu-gb-3"
+    ],
+    "license_file": "licenses.txt", "__license_file_comment__": "one basekey license per line",
+    "zone_resources_file": "zone-resources.json", "__zone_resource_file_comment__": "output of the ibmcloud_test_harness_prep process",
+    "f5_images_catalog_file": "f5-image-catalog.json", "__f5_image_catalog_file_comment__": "output of the ibmcloud image uploader",
+    "profile_selection": {
+        "all-1slot": "cx2-4x8",
+        "ltm-1slot": "cx2-2x4"
+    },
+    "api_key": "[API_KEY_HERE]",
+    "report_service_base_url": "http://[REPORT_SERVER_IP_HERE]"
+}

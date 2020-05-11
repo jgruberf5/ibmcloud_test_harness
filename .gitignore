@@ -1,0 +1,10 @@
+.venv
+.vscode
+licenses*
+completed_tests/*
+running_tests/*
+queued_tests/*
+f5-image-catalog.json
+zone-resources.json
+builder-config.json
+runners-config.json
