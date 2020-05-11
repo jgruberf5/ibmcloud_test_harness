@@ -1,12 +1,14 @@
 #!/bin/bash
 
 rm -rf ./*.tar.gz
-cd 1nic
-tar cvzf ../1nic.tar.gz ./ > /dev/null
-cd ../2nic
-tar cvzf ../2nic.tar.gz ./ > /dev/null
-cd ../3nic
-tar cvzf ../3nic.tar.gz ./ > /dev/null
-cd ..
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+for f in *; do
+    if [ -d "$f" ]; then
+        cd $f
+        echo "creating $f test template"
+        tar cvzf ../$f.tar.gz ./ > /dev/null
+        cd $DIR
+    fi
+done

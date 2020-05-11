@@ -115,8 +115,8 @@ def build():
                                 var_template = json.load(vj)
                             var_json_file = os.path.join(test_dir, 'test_vars.json')
                             var_tf_file = os.path.join(test_dir, 'test_vars.tfvars')
-                            var_tf_content = ''
-                            var_to_write = {}
+                            var_tf_content = "%s = \"%s\"\n" % ('test_type', temp_type)
+                            var_to_write = {'test_type': temp_type}
                             for v in var_template:
                                 if v['test_variable'] == 'api_key':
                                     var_to_write[v['variable_name']] = CONFIG['api_key']

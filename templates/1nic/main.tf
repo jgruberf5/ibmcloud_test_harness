@@ -130,3 +130,6 @@ output "f5_as_url" {
   value = "https://${ibm_is_floating_ip.f5_floating_ip.address}:8443/mgmt/shared/appsvcs/declare"
 }
 
+output "test_type" {
+  value = var.test_type
+}

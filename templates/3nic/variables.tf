@@ -47,4 +47,6 @@ variable "phone_home_url" {
   default = ""
 }
 
-
+variable "test_type" {
+  default = ""
+}
