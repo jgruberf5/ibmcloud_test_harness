@@ -5,5 +5,6 @@ packages:
   - python3-wheel
   - git
 runcmd:
+  - cd /usr/src && wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip && unzip terraform_0.12.24_linux_amd64.zip && mv ./terraform /usr/bin && chmod +x /usr/bin/terraform
   - /usr/bin/git clone https://github.com/jgruberf5/ibmcloud_test_harness.git /var/lib/ibmcloud_test_harness
   - /usr/bin/pip3 install -r /var/lib/ibmcloud_test_harness/requirements.txt
