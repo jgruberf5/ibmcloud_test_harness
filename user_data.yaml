@@ -1,0 +1,9 @@
+#cloud-config
+packages:
+  - python3-pip
+  - python3-setuptools
+  - python3-wheel
+  - git
+runcmd:
+  - /usr/bin/git clone https://github.com/jgruberf5/ibmcloud_test_harness.git /var/lib/ibmcloud_test_harness
+  - /usr/bin/pip3 install -r /var/lib/ibmcloud_test_harness/requirements.txt
