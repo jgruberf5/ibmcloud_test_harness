@@ -27,10 +27,12 @@ data "template_file" "user_data" {
   }
 }
 
+resource "random_uuid" "namer" { }
+
 # create F5 control plane firewalling
 # https://support.f5.com/csp/article/K46122561
 resource "ibm_is_security_group" "f5_management_sg" {
-  name = "f5-management-sg"
+  name = "sm-${random_uuid.namer.result}"
   vpc  = data.ibm_is_subnet.f5_management.vpc
 }
 
@@ -125,7 +127,7 @@ resource "ibm_is_security_group_rule" "f5_management_out_icmp" {
 // allow all traffic to data plane interfaces
 // TMM is the firewall
 resource "ibm_is_security_group" "f5_tmm_sg" {
-  name = "f5-tmm-sg"
+  name = "sd-${random_uuid.namer.result}"
   vpc  = data.ibm_is_subnet.f5_management.vpc
 }
 
@@ -206,7 +208,7 @@ resource "ibm_is_instance" "f5_ve_instance" {
 
 # create floating IPs
 resource "ibm_is_floating_ip" "f5_management_floating_ip" {
-  name   = "management-floating-ip"
+  name   = "f0-${random_uuid.namer.result}"
   target = ibm_is_instance.f5_ve_instance.primary_network_interface.0.id
 }
 
@@ -229,15 +231,15 @@ output "VPC" {
 }
 
 output "f5_shell_access" {
-  value = "ssh://root@${ibm_is_floating_ip.f5_management_ip.address}"
+  value = "ssh://root@${ibm_is_floating_ip.f5_management_floating_ip.address}"
 }
 
 output "f5_admin_portal" {
-  value = "https://${ibm_is_floating_ip.f5_management_ip.address}"
+  value = "https://${ibm_is_floating_ip.f5_management_floating_ip.address}"
 }
 
 output "f5_as_url" {
-  value = "https://${ibm_is_floating_ip.f5_management_ip.address}/mgmt/shared/appsvcs/declare"
+  value = "https://${ibm_is_floating_ip.f5_management_floating_ip.address}/mgmt/shared/appsvcs/declare"
 }
 
 output "test_type" {

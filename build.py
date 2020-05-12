@@ -125,9 +125,9 @@ def build():
                                     var_to_write[v['variable_name']] = region_from_zone(zone)
                                     var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], region_from_zone(zone))
                                 if v['test_variable'] == 'test_id':
-                                    var_to_write[v['variable_name']] = test_id
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], test_id)
-                                if v['test_variable'] == 'tmos_image_name':
+                                    var_to_write[v['variable_name']] = "t-%s" % test_id
+                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], "t-%s" % test_id)
+                                if v['test_variable'] == 'image_name':
                                     var_to_write[v['variable_name']] = image
                                     var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], image)
                                 if v['test_variable'] == 'size':
