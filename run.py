@@ -91,6 +91,8 @@ def poll_report(test_id):
             data = response.json()
             if data['duration'] > 0:
                 return data
+        seconds_left = (end_time - time.time())
+        LOG.debug('test_id: %s showing duration %s with %s seconds left', test_id, str(data['duration']), str(seconds_left))
         time.sleep(CONFIG['report_request_frequency'])
     return None
 
@@ -124,7 +126,7 @@ def run_test(test_dir, zone, image, ttype):
     update_report(test_id, update_data)
     results = poll_report(test_id)
     if not results:
-        results = {'test timedout (%d seconds)': int(CONFIG['test_timeout'])}
+        results = {"test timedout": "(%d seconds)" % int(CONFIG['test_timeout'])}
         stop_report(test_id, results)
     (rc, out, err) = tf.destroy()
     if rc > 0:
@@ -161,12 +163,14 @@ def runner():
                     rt = threading.Thread(target=run_test, args=(test_dir, zone, image, ttype,))
                     running_threads.append(rt)
                     rt.start()
+                else:
+                    tests_to_run = False
         if running_threads:
-            LOG.debug('currently there are %d running threads', len(running_threads))
+            LOG.debug('there are %d concurrent tests in this round of testing', len(running_threads))
             for t in running_threads:
                 t.join()
         else:
-            tests_to_run = False
+            LOG.info('starting next batch of testing')
 
 
 def initialize():
