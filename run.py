@@ -90,9 +90,10 @@ def poll_report(test_id):
         if response.status_code < 400:
             data = response.json()
             if data['duration'] > 0:
+                LOG.info('test run %s completed', test_id)
                 return data
-        seconds_left = (end_time - time.time())
-        LOG.debug('test_id: %s showing duration %s with %s seconds left', test_id, str(data['duration']), str(seconds_left))
+        seconds_left = int(end_time - time.time())
+        LOG.debug('test_id: %s with %s seconds left', test_id, str(seconds_left))
         time.sleep(CONFIG['report_request_frequency'])
     return None
 
@@ -111,8 +112,10 @@ def run_test(test_dir, zone, image, ttype):
     if rc > 0:
         results = {'terraform_failed': "init failure: %s" % err }
         stop_report(test_id, results)
+    LOG.info('creating cloud resources for test %s', test_id)
     (rc, out, err) = tf.apply(dir_or_plan=False, skip_plan=True)
     if rc > 0:
+        LOG.error('terraform failed for test: %s - %s', test_id, err)
         results = {'terraform_failed': "apply failure: %s" % err }
         stop_report(test_id, results)
     out = tf.output(json=True)
@@ -128,6 +131,7 @@ def run_test(test_dir, zone, image, ttype):
     if not results:
         results = {"test timedout": "(%d seconds)" % int(CONFIG['test_timeout'])}
         stop_report(test_id, results)
+    LOG.info('destroying cloud resources for test %s', test_id)
     (rc, out, err) = tf.destroy()
     if rc > 0:
         LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
@@ -160,17 +164,21 @@ def runner():
             for r in range(n):
                 (image, ttype, test_dir) = initialize_test_dir(os.path.join(QUEUE_DIR, zone))
                 if test_dir:
+                    LOG.debug('adding test thread for test: %s', test_dir)
                     rt = threading.Thread(target=run_test, args=(test_dir, zone, image, ttype,))
                     running_threads.append(rt)
                     rt.start()
                 else:
+                    LOG.debug('there were not more queued tests after scheduling %d threads', r)
                     tests_to_run = False
         if running_threads:
             LOG.debug('there are %d concurrent tests in this round of testing', len(running_threads))
             for t in running_threads:
                 t.join()
+            LOG.debug('all threads for this round completed')
         else:
-            LOG.info('starting next batch of testing')
+            LOG.info('there are not scheduled test threads to run')
+            tests_to_run = False
 
 
 def initialize():
