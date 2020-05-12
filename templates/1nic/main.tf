@@ -100,6 +100,7 @@ resource "ibm_is_instance" "f5_ve_instance" {
   zone = data.ibm_is_subnet.f5_subnet.zone
   keys = [data.ibm_is_ssh_key.f5_ssh_pub_key.id]
   user_data = data.template_file.user_data.rendered
+  depends_on = [ibm_is_security_group.f5_tmm_sg]
 }
 
 # create floating IPs
