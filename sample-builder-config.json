@@ -13,6 +13,15 @@
         "eu-gb-2",
         "eu-gb-3"
     ],
+    "active_images": [
+        "14-1",
+        "15-1"
+    ],
+    "active_types": [
+        "1nic",
+        "2nic",
+        "3nic"
+    ],
     "license_file": "licenses.txt", "__license_file_comment__": "one basekey license per line",
     "zone_resources_file": "zone-resources.json", "__zone_resource_file_comment__": "output of the ibmcloud_test_harness_prep process",
     "f5_images_catalog_file": "f5-image-catalog.json", "__f5_image_catalog_file_comment__": "output of the ibmcloud image uploader",
