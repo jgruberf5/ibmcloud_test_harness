@@ -201,6 +201,9 @@ def build():
                                                 CONFIG['report_service_base_url'], test_id)
                                             var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], "%s/stop/%s" % (
                                                 CONFIG['report_service_base_url'], test_id))
+                                        if v['test_variable'] == 'f5_hardcoded_sg':
+                                            var_to_write[v['variable_name']] = CONFIG['zone_security_groups'][zone]
+                                            var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], CONFIG['zone_security_groups'][zone])
                                     with open(var_json_file, 'w') as vj:
                                         vj.write(json.dumps(
                                             var_to_write, sort_keys=True, indent=4, separators=(',', ': ')))
