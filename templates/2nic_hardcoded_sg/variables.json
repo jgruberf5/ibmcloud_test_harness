@@ -1,0 +1,62 @@
+[
+    {
+        "default": null,
+        "test_variable": "api_key",
+        "variable_name": "api_key" 
+    },
+    {
+        "default": "us-south",
+        "test_variable": "region",
+        "variable_name": "region"
+    },
+    {
+        "default": null,
+        "test_variable": "test_id",
+        "variable_name": "instance_name"
+    },
+    {
+        "default": null,
+        "test_variable": "image_name",
+        "variable_name": "tmos_image_name"
+    },
+    {
+        "default": "cx2-4x8",
+        "test_variable": "size",
+        "variable_name": "instance_profile"
+    },
+    {
+        "default": null,
+        "test_variable": "ssh_key_name",
+        "variable_name": "ssh_key_name"
+    },
+    {
+        "default": null,
+        "test_variable": "license",
+        "variable_name": "tmos_license_basekey"
+    },
+    {
+        "default": "f5C0nfig",
+        "test_variable": "admin_password",
+        "variable_name": "tmos_admin_password"
+    },
+    {
+        "default": null,
+        "test_variable": "f5_management_id",
+        "variable_name": "management_subnet_id"
+    },
+    {
+        "default": null,
+        "test_variable": "f5_external_id",
+        "variable_name": "data_subnet_id"
+    },
+    {
+        "default": null,
+        "test_variable": "report_finish_url",
+        "variable_name": "phone_home_url"
+    },
+    {
+        "default": null,
+        "test_variable": "f5_hardcoded_sg",
+        "variable_name": "f5_wide_open_sg"
+    }
+]
