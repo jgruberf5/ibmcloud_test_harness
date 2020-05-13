@@ -19,6 +19,7 @@
 import os
 import sys
 import shutil
+import math
 import glob
 import json
 import logging
@@ -84,86 +85,131 @@ def build():
     with open(CONFIG['zone_resources_file'], 'r') as zrf:
         zone_resources = json.load(zrf)
     zones = os.listdir(QUEUE_DIR)
-    license_available = True
-    while license_available:
-        for zone in zones:
-            if zone in CONFIG['active_zones']:    
-                zone_dir = os.path.join(QUEUE_DIR, zone)
-                images = os.listdir(zone_dir)
+    num_licenses = licenses_available()
+    test_map = {}
+    for zone in zones:
+        if zone in CONFIG['active_zones']:
+            if not zone in test_map:
+                test_map[zone] = {'test_count': 0}
+    number_of_active_zones = len(test_map)
+    number_per_zone = num_licenses / number_of_active_zones
+    number_license_left = num_licenses % number_of_active_zones
+    for zone in zones:
+        if zone in CONFIG['active_zones']:
+            test_map[zone]['test_to_create'] = number_per_zone
+            zone_dir = os.path.join(QUEUE_DIR, zone)
+            images = os.listdir(zone_dir)
+            while test_map[zone]['test_to_create'] > 0:
                 for image in images:
-                    image_dir = os.path.join(zone_dir, image)
-                    size = ''
-                    for sstr in CONFIG['profile_selection']:
-                        if image.find(sstr) > 0:
-                            size = CONFIG['profile_selection'][sstr]
-                    temp_types = os.listdir(image_dir)
-                    for temp_type in temp_types:
-                        temp_dir = os.path.join(image_dir, temp_type)
-                        template = "%s/%s.tar.gz" % (TEMPLATE_DIR,
-                                                     os.path.basename(temp_type))
-                        license = get_license()
-                        if len(license) > 0:
-                            test_id = str(uuid.uuid4())
-                            test_dir = os.path.join(temp_dir, test_id)
-                            LOG.info('creating test: %s' % test_dir)
-                            os.mkdir(test_dir)
-                            test_archive = tarfile.open(template)
-                            test_archive.extractall(test_dir)
-                            test_archive.close()
-                            var_template = {}
-                            with open(os.path.join(test_dir, 'variables.json'), 'r') as vj:
-                                var_template = json.load(vj)
-                            var_json_file = os.path.join(test_dir, 'test_vars.json')
-                            var_tf_file = os.path.join(test_dir, 'test_vars.tfvars')
-                            var_tf_content = "%s = \"%s\"\n" % ('test_type', temp_type)
-                            var_to_write = {'test_type': temp_type}
-                            for v in var_template:
-                                if v['test_variable'] == 'api_key':
-                                    var_to_write[v['variable_name']] = CONFIG['api_key']
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], CONFIG['api_key'])
-                                if v['test_variable'] == 'region':
-                                    var_to_write[v['variable_name']] = region_from_zone(zone)
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], region_from_zone(zone))
-                                if v['test_variable'] == 'test_id':
-                                    var_to_write[v['variable_name']] = "t-%s" % test_id
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], "t-%s" % test_id)
-                                if v['test_variable'] == 'image_name':
-                                    var_to_write[v['variable_name']] = image
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], image)
-                                if v['test_variable'] == 'size':
-                                    var_to_write[v['variable_name']] = size
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], size)
-                                if v['test_variable'] == 'license':
-                                    var_to_write[v['variable_name']] = license
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], license)
-                                if v['test_variable'] == 'admin_password':
-                                    var_to_write[v['variable_name']] = 'f5C0nfig'
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], 'f5C0nfig')
-                                if v['test_variable'] == 'ssh_key_name':
-                                    var_to_write[v['variable_name']] = zone_resources[zone]['ssh_key_name']['value']
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], zone_resources[zone]['ssh_key_name']['value'])
-                                if v['test_variable'] == 'f5_management_id':
-                                    var_to_write[v['variable_name']] = zone_resources[zone]['f5_management_id']['value']
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], zone_resources[zone]['f5_management_id']['value'])
-                                if v['test_variable'] == 'f5_cluster_id':
-                                    var_to_write[v['variable_name']] = zone_resources[zone]['f5_cluster_id']['value']
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], zone_resources[zone]['f5_cluster_id']['value'])
-                                if v['test_variable'] == 'f5_internal_id':
-                                    var_to_write[v['variable_name']] = zone_resources[zone]['f5_internal_id']['value']
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], zone_resources[zone]['f5_internal_id']['value'])
-                                if v['test_variable'] == 'f5_external_id':
-                                    var_to_write[v['variable_name']] = zone_resources[zone]['f5_external_id']['value']
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], zone_resources[zone]['f5_external_id']['value'])
-                                if v['test_variable'] == 'report_finish_url':
-                                    var_to_write[v['variable_name']] = "%s/stop/%s" % (CONFIG['report_service_base_url'], test_id)
-                                    var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], "%s/stop/%s" % (CONFIG['report_service_base_url'], test_id))
-                            with open(var_json_file, 'w') as vj:
-                                vj.write(json.dumps(var_to_write, sort_keys=True, indent=4, separators=(',', ': ')))
-                            with open(var_tf_file, 'w') as vtf:
-                                vtf.write(var_tf_content)
-                        else:
-                            license_available = False
-
+                    image_eligible = False
+                    for match in CONFIG['active_images']:
+                        if image.find(match) > 0:
+                            image_eligible = True
+                    if image_eligible:
+                        image_dir = os.path.join(zone_dir, image)
+                        size = ''
+                        for sstr in CONFIG['profile_selection']:
+                            if image.find(sstr) > 0:
+                                size = CONFIG['profile_selection'][sstr]                     
+                        temp_types = os.listdir(image_dir)
+                        for temp_type in temp_types:
+                            if temp_type in CONFIG['active_types']:
+                                temp_dir = os.path.join(image_dir, temp_type)
+                                template = "%s/%s.tar.gz" % (TEMPLATE_DIR,
+                                                             os.path.basename(temp_type))
+                                LOG.debug('creating a test: %s - %s - %s', zone, image, temp_type)
+                                license = get_license()
+                                if len(license) > 0:
+                                    test_id = str(uuid.uuid4())
+                                    test_dir = os.path.join(temp_dir, test_id)
+                                    LOG.info('creating test: %s' % test_dir)
+                                    os.mkdir(test_dir)
+                                    test_archive = tarfile.open(template)
+                                    test_archive.extractall(test_dir)
+                                    test_archive.close()
+                                    var_template = {}
+                                    with open(os.path.join(test_dir, 'variables.json'), 'r') as vj:
+                                        var_template = json.load(vj)
+                                    var_json_file = os.path.join(
+                                        test_dir, 'test_vars.json')
+                                    var_tf_file = os.path.join(
+                                        test_dir, 'test_vars.tfvars')
+                                    var_tf_content = "%s = \"%s\"\n" % (
+                                        'test_type', temp_type)
+                                    var_to_write = {'test_type': temp_type}
+                                    for v in var_template:
+                                        if v['test_variable'] == 'api_key':
+                                            var_to_write[v['variable_name']
+                                                        ] = CONFIG['api_key']
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], CONFIG['api_key'])
+                                        if v['test_variable'] == 'region':
+                                            var_to_write[v['variable_name']
+                                                        ] = region_from_zone(zone)
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], region_from_zone(zone))
+                                        if v['test_variable'] == 'test_id':
+                                            var_to_write[v['variable_name']
+                                                        ] = "t-%s" % test_id
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], "t-%s" % test_id)
+                                        if v['test_variable'] == 'image_name':
+                                            var_to_write[v['variable_name']] = image
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], image)
+                                        if v['test_variable'] == 'size':
+                                            var_to_write[v['variable_name']] = size
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], size)
+                                        if v['test_variable'] == 'license':
+                                            var_to_write[v['variable_name']
+                                                        ] = license
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], license)
+                                        if v['test_variable'] == 'admin_password':
+                                            var_to_write[v['variable_name']
+                                                        ] = 'f5C0nfig'
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], 'f5C0nfig')
+                                        if v['test_variable'] == 'ssh_key_name':
+                                            var_to_write[v['variable_name']
+                                                        ] = zone_resources[zone]['ssh_key_name']['value']
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], zone_resources[zone]['ssh_key_name']['value'])
+                                        if v['test_variable'] == 'f5_management_id':
+                                            var_to_write[v['variable_name']
+                                                        ] = zone_resources[zone]['f5_management_id']['value']
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], zone_resources[zone]['f5_management_id']['value'])
+                                        if v['test_variable'] == 'f5_cluster_id':
+                                            var_to_write[v['variable_name']
+                                                        ] = zone_resources[zone]['f5_cluster_id']['value']
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], zone_resources[zone]['f5_cluster_id']['value'])
+                                        if v['test_variable'] == 'f5_internal_id':
+                                            var_to_write[v['variable_name']
+                                                        ] = zone_resources[zone]['f5_internal_id']['value']
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], zone_resources[zone]['f5_internal_id']['value'])
+                                        if v['test_variable'] == 'f5_external_id':
+                                            var_to_write[v['variable_name']
+                                                        ] = zone_resources[zone]['f5_external_id']['value']
+                                            var_tf_content += "%s = \"%s\"\n" % (
+                                                v['variable_name'], zone_resources[zone]['f5_external_id']['value'])
+                                        if v['test_variable'] == 'report_finish_url':
+                                            var_to_write[v['variable_name']] = "%s/stop/%s" % (
+                                                CONFIG['report_service_base_url'], test_id)
+                                            var_tf_content += "%s = \"%s\"\n" % (v['variable_name'], "%s/stop/%s" % (
+                                                CONFIG['report_service_base_url'], test_id))
+                                    with open(var_json_file, 'w') as vj:
+                                        vj.write(json.dumps(
+                                            var_to_write, sort_keys=True, indent=4, separators=(',', ': ')))
+                                    with open(var_tf_file, 'w') as vtf:
+                                        vtf.write(var_tf_content)
+                                    test_map[zone]['test_to_create'] = test_map[zone]['test_to_create'] - 1
+                                else:
+                                    test_map[zone]['test_to_create'] = 0
+    
 
 def initialize():
     global CONFIG
@@ -206,7 +252,11 @@ if __name__ == "__main__":
     initialize()
     ERROR_MESSAGE = ''
     ERROR = False
-    build()
+    num_licenses = licenses_available()
+    LOG.info('%d licenses available for test queuing', num_licenses)
+    while num_licenses > 0:
+        build()
+        num_licenses = licenses_available()
     STOP_TIME = time.time()
     DURATION = STOP_TIME - START_TIME
     LOG.debug(

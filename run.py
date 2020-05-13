@@ -168,9 +168,6 @@ def runner():
                     rt = threading.Thread(target=run_test, args=(test_dir, zone, image, ttype,))
                     running_threads.append(rt)
                     rt.start()
-                else:
-                    LOG.debug('there were not more queued tests after scheduling %d threads', r)
-                    tests_to_run = False
         if running_threads:
             LOG.debug('there are %d concurrent tests in this round of testing', len(running_threads))
             for t in running_threads:
