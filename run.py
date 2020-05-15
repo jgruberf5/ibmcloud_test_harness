@@ -99,8 +99,8 @@ def poll_report(test_id):
 
 
 def run_test(test_dir, zone, image, ttype):
-    LOG.info('running test %s' % test_dir)
     test_id = os.path.basename(test_dir)
+    LOG.info('running test %s' % test_id)
     start_data = {
         'zone': zone,
         'image_name': image,
@@ -159,22 +159,33 @@ def runner():
     while tests_to_run:
         running_threads = list()
         zones = os.listdir(QUEUE_DIR)
+        runners = {}
         for zone in zones:
-            n = CONFIG['runners_per_zone']
-            for r in range(n):
-                (image, ttype, test_dir) = initialize_test_dir(os.path.join(QUEUE_DIR, zone))
-                if test_dir:
-                    LOG.debug('adding test thread for test: %s', test_dir)
-                    rt = threading.Thread(target=run_test, args=(test_dir, zone, image, ttype,))
-                    running_threads.append(rt)
-                    rt.start()
+            if zone not in runners:
+                runners[zone] = list()
+                if len(runners[zone]) < CONFIG['runners_per_zone']:
+                    (image, ttype, test_dir) = initialize_test_dir(os.path.join(QUEUE_DIR, zone))
+                    if test_dir:
+                        rt = threading.Thread(target=run_test, args=(test_dir, zone, image, ttype,))
+                        test_id = os.path.basename(test_dir)
+                        LOG.info('creating test thread %s - %s - %s: %s', zone, image, ttype, test_id)
+                        runners[zone].append({
+                            'id': test_id,
+                            'image': image,
+                            'type': ttype,
+                            'runner': rt
+                        })
+        for zone in runners:
+            for th in runners[zone]:
+                running_threads.append(th['runner'])
+                th['runner'].start()
         if running_threads:
             LOG.debug('there are %d concurrent tests in this round of testing', len(running_threads))
             for t in running_threads:
                 t.join()
             LOG.debug('all threads for this round completed')
         else:
-            LOG.info('there are not scheduled test threads to run')
+            LOG.info('there are no scheduled test threads left to run')
             tests_to_run = False
 
 
