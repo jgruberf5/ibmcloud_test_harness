@@ -22,6 +22,20 @@
         "2nic",
         "3nic"
     ],
+    "zone_security_groups" : {
+        "us-south-1": "r006-d3d43c14-60b3-41b5-9171-66e20adb7c88",
+        "us-south-2": "r006-e5e4381b-b0d5-45e6-ac34-77a3c582ba18",
+        "us-south-3": "r006-7cd32500-bfd7-45c3-a1bf-73e83e7f02f0",
+        "us-east-1": "r014-7ba4514b-f5ea-4b13-91e1-525a1d7b089c",
+        "us-east-2": "r014-464086ec-f58e-4054-8d25-c05626e04d47",
+        "us-east-3": "r014-309b4a1b-5317-480a-9300-23588445a03b",
+        "eu-de-1": "r010-3ed0c705-2c41-432c-9653-9d94f926d65b",
+        "eu-de-2": "r010-b4553c0c-4b4f-4cae-887a-2fec443e6eb1",
+        "eu-de-3": "r010-f2c37e34-8ed4-452f-962e-82573239d19e",
+        "eu-gb-1": "r018-7931003a-9c29-40cd-abdf-1037cc4e2d37",
+        "eu-gb-2": "r018-a4d5660b-338a-41fb-b426-b56f47780cfb",
+        "eu-gb-3": "r018-a17d8bcb-159d-42a5-aa9b-a36d9f50d615"
+    },
     "license_file": "licenses.txt", "__license_file_comment__": "one basekey license per line",
     "zone_resources_file": "zone-resources.json", "__zone_resource_file_comment__": "output of the ibmcloud_test_harness_prep process",
     "f5_images_catalog_file": "f5-image-catalog.json", "__f5_image_catalog_file_comment__": "output of the ibmcloud image uploader",
