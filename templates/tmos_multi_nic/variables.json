@@ -82,22 +82,22 @@
     {
         "default": null,
         "test_variable": "f5_management_id",
-        "variable_name": "subnet_id"
+        "variable_name": "management_subnet_id"
     },
     {
         "default": null,
         "test_variable": "f5_cluster_id",
-        "variable_name": "cluster_subnet_id"
+        "variable_name": "data_1_1_subnet_id"
     },
     {
         "default": null,
         "test_variable": "f5_internal_id",
-        "variable_name": "internal_subnet_id"
+        "variable_name": "data_1_2_subnet_id"
     },
     {
         "default": null,
         "test_variable": "f5_external_id",
-        "variable_name": "external_subnet_id"
+        "variable_name": "data_1_3_subnet_id"
     },
     {
         "default": null,
