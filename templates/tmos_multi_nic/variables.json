@@ -1,0 +1,107 @@
+[
+    {
+        "default": null,
+        "test_variable": "api_key",
+        "variable_name": "api_key"
+    },
+    {
+        "default": "us-south",
+        "test_variable": "region",
+        "variable_name": "region"
+    },
+    {
+        "default": null,
+        "test_variable": "test_id",
+        "variable_name": "instance_name"
+    },
+    {
+        "default": null,
+        "test_variable": "image_name",
+        "variable_name": "tmos_image_name"
+    },
+    {
+        "default": "cx2-4x8",
+        "test_variable": "size",
+        "variable_name": "instance_profile"
+    },
+    {
+        "default": null,
+        "test_variable": "ssh_key_name",
+        "variable_name": "ssh_key_name"
+    },
+    {
+        "default": "none",
+        "test_variable": "license_type",
+        "variable_name": "license_type"
+    },
+    {
+        "default": null,
+        "test_variable": "byol_license_basekey",
+        "variable_name": "byol_license_basekey"
+    },
+    {
+        "default": null,
+        "test_variable": "license_host",
+        "variable_name": "licese"
+    },
+    {
+        "default": "admin",
+        "test_variable": "license_username",
+        "variable_name": "license_username"
+    },
+    {
+        "default": null,
+        "test_variable": "license_password",
+        "variable_name": "license_password"
+    },
+    {
+        "default": "TESTELA",
+        "test_variable": "license_pool",
+        "variable_name": "license_pool"
+    },
+    {
+        "default": null,
+        "test_variable": "license_sku_keyword_1",
+        "variable_name": "license_sku_keyword_1"
+    },
+    {
+        "default": null,
+        "test_variable": "license_sku_keyword_2",
+        "variable_name": "license_sku_keyword_2"
+    },
+    {
+        "default": "hourly",
+        "test_variable": "license_unit_of_measure",
+        "variable_name": "license_unit_of_measure"
+    },
+    {
+        "default": "f5C0nfig",
+        "test_variable": "admin_password",
+        "variable_name": "tmos_admin_password"
+    },
+    {
+        "default": null,
+        "test_variable": "f5_management_id",
+        "variable_name": "subnet_id"
+    },
+    {
+        "default": null,
+        "test_variable": "f5_cluster_id",
+        "variable_name": "cluster_subnet_id"
+    },
+    {
+        "default": null,
+        "test_variable": "f5_internal_id",
+        "variable_name": "internal_subnet_id"
+    },
+    {
+        "default": null,
+        "test_variable": "f5_external_id",
+        "variable_name": "external_subnet_id"
+    },
+    {
+        "default": null,
+        "test_variable": "report_finish_url",
+        "variable_name": "phone_home_url"
+    }
+]
