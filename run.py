@@ -157,24 +157,24 @@ def initialize_test_dir(zone_dir):
 def runner():
     tests_to_run = True
     while tests_to_run:
-        running_threads = list()
+        running_threads = []
         zones = os.listdir(QUEUE_DIR)
         runners = {}
         for zone in zones:
             if zone not in runners:
-                runners[zone] = list()
-                if len(runners[zone]) < CONFIG['runners_per_zone']:
-                    (image, ttype, test_dir) = initialize_test_dir(os.path.join(QUEUE_DIR, zone))
-                    if test_dir:
-                        rt = threading.Thread(target=run_test, args=(test_dir, zone, image, ttype,))
-                        test_id = os.path.basename(test_dir)
-                        LOG.info('creating test thread %s - %s - %s: %s', zone, image, ttype, test_id)
-                        runners[zone].append({
-                            'id': test_id,
-                            'image': image,
-                            'type': ttype,
-                            'runner': rt
-                        })
+                runners[zone] = []  
+            if len(runners[zone]) < CONFIG['runners_per_zone']:
+                (image, ttype, test_dir) = initialize_test_dir(os.path.join(QUEUE_DIR, zone))
+                if test_dir:
+                    rt = threading.Thread(target=run_test, args=(test_dir, zone, image, ttype,))
+                    test_id = os.path.basename(test_dir)
+                    runners[zone].append({
+                        'id': test_id,
+                        'image': image,
+                        'type': ttype,
+                        'runner': rt
+                    })
+                    LOG.info('creating test thread %s(%d) - %s - %s: %s', zone,  len(runners[zone]), image, ttype, test_id)       
         for zone in runners:
             for th in runners[zone]:
                 running_threads.append(th['runner'])
