@@ -97,7 +97,7 @@ def get_offerings(bigiq_session, pool_id, search1, search2):
     for offering in offerings:
         if offering['name'].find(search1) >= 0:
             if search2:
-                if offering['name'].find(search2 >= 0:
+                if offering['name'].find(search2) >= 0:
                     return offering['id']
             else:
                 return offering['id']
