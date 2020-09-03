@@ -231,7 +231,7 @@ def build_utility():
                                 vtf.write(var_tf_content)
                             total_tests = total_tests + 1
                         test_map[zone]['test_to_create'] = test_map[zone]['test_to_create'] - 1
-    LOG.info("%d total tests created in %d zones for %d images", total_tests, total_zones, len(indexed_images.keys))
+    LOG.info("%d total tests created in %d zones for %d images", total_tests, total_zones, len(indexed_images.keys()))
 
 def build_byol():
     zone_resources = {}
