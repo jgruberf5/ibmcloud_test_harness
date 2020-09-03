@@ -80,6 +80,7 @@ def get_pool_id(bigiq_session, pool_name):
     pools = response_json['items']
     for pool in pools:
         if pool['name'] == pool_name or pool['regkey'] == pool_name:
+            LOG.debug('pool %s', pool)
             LOG.debug('found pool %s with id %s', pool_name, pool['id'])
             return pool['id']
     return None
