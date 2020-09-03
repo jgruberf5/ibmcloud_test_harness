@@ -116,7 +116,7 @@ def build_utility():
                             temp_dir = os.path.join(image_dir, temp_type)
                             template = "%s/%s.tar.gz" % (TEMPLATE_DIR,
                                                          os.path.basename(temp_type))
-                            LOG.debug('creating a test: %s - %s - %s', zone, image, temp_type)
+                            # LOG.debug('creating a test: %s - %s - %s', zone, image, temp_type)
                             test_id = str(uuid.uuid4())
                             test_dir = os.path.join(temp_dir, test_id)
                             LOG.info('creating test: %s' % test_dir)
