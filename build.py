@@ -94,6 +94,7 @@ def build_utility():
     number_per_zone = CONFIG['utility_pool_tests_per_zone']
     total_tests = 0
     total_zones = 0
+    indexed_images = {}
     for zone in zones:
         if zone in CONFIG['active_zones']:
             LOG.info('creating tests in zone: %s' % zone)
@@ -109,6 +110,9 @@ def build_utility():
                         if image.find(match) > 0:
                             image_eligible = True
                     if image_eligible:
+                        if image not in indexed_images:
+                            indexed_images[image] = image
+                        LOG.debug('setting up test for image: %s in %s', image, zone)
                         image_dir = os.path.join(zone_dir, image)
                         size = ''
                         for sstr in CONFIG['profile_selection']:
@@ -228,7 +232,7 @@ def build_utility():
                                 vtf.write(var_tf_content)
                             total_tests = total_tests + 1
                         test_map[zone]['test_to_create'] = test_map[zone]['test_to_create'] - 1
-    LOG.info("%d total tests created in %d zones for %d images", total_tests, total_zones, len(CONFIG['active_images']))
+    LOG.info("%d total tests created in %d zones for %d images", total_tests, total_zones, len(indexed_images))
 
 def build_byol():
     zone_resources = {}
