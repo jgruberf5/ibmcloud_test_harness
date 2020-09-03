@@ -124,7 +124,7 @@ def clean():
     if 'zone_license_hosts' in CONFIG:
         zones = CONFIG['zone_license_hosts']
         for zone in zones.keys():
-            bigiq_config = zone[zone]
+            bigiq_config = CONFIG['zone_license_hosts'][zone]
             bigiq = get_bigiq_session(
                 bigiq_config['license_host'], bigiq_config['license_username'], bigiq_config['license_password'], 30)
             pool_id = get_pool_id(bigiq, bigiq_config['license_pool'])
