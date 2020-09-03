@@ -109,8 +109,8 @@ def build_utility():
                         if image.find(match) > 0:
                             image_eligible = True
                     if image_eligible:
-                        if image not in indexed_images:
-                            indexed_images[image] = True
+                        if image[0:-(len(zone)+1)] not in indexed_images:
+                            indexed_images[image[0:-(len(zone)+1)]] = True
                         LOG.debug('setting up test for image: %s in %s (%d)', image, zone, number_per_zone)
                         image_dir = os.path.join(zone_dir, image)
                         size = ''
