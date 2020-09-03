@@ -150,7 +150,13 @@ if __name__ == "__main__":
     initialize()
     ERROR_MESSAGE = ''
     ERROR = False
-    clean()
+    KEEP_CLEAN = os.getenv('KEEP_CLEAN', '0')
+    if KEEP_CLEAN == '1' or KEEP_CLEAN.lower() == 'true':
+        while True:
+            clean()
+            time.sleep(300)
+    else:
+        clean()
     STOP_TIME = time.time()
     DURATION = STOP_TIME - START_TIME
     LOG.debug(
