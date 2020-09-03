@@ -120,7 +120,7 @@ def build_utility():
                         if base_image_name not in indexed_images:
                             indexed_images[image[0:-(len(zone)+1)]] = True
                         if base_image_name not in test_per_zone[zone]:
-                            test_per_zone[zone][base_image_name] = 1
+                            test_per_zone[zone][base_image_name] = 0
                         if test_per_zone[zone][base_image_name] <= number_per_zone:
                             test_per_zone[zone][base_image_name] = test_per_zone[zone][base_image_name] + 1
                             adding_test = True
