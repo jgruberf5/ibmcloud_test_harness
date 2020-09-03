@@ -23,9 +23,11 @@ import logging
 import datetime
 import time
 import requests
+import concurrent.futures
 import threading
 import shutil
 import python_terraform as pt
+import random
 
 LOG = logging.getLogger('ibmcloud_test_harness_run')
 LOG.setLevel(logging.DEBUG)
@@ -46,7 +48,8 @@ CONFIG = {}
 
 MY_PID = None
 
-def check_pid(pid):        
+
+def check_pid(pid):
     try:
         os.kill(pid, 0)
     except OSError:
@@ -68,7 +71,7 @@ def update_report(test_id, update_data):
         'Content-Type': 'application/json'
     }
     requests.put("%s/report/%s" % (CONFIG['report_service_base_url'], test_id),
-                  headers=headers, data=json.dumps(update_data))
+                 headers=headers, data=json.dumps(update_data))
 
 
 def stop_report(test_id, results):
@@ -86,19 +89,22 @@ def poll_report(test_id):
         headers = {
             'Content-Type': 'application/json'
         }
-        response = requests.get("%s/report/%s" % (base_url, test_id), headers=headers)
+        response = requests.get("%s/report/%s" %
+                                (base_url, test_id), headers=headers)
         if response.status_code < 400:
             data = response.json()
             if data['duration'] > 0:
                 LOG.info('test run %s completed', test_id)
                 return data
         seconds_left = int(end_time - time.time())
-        LOG.debug('test_id: %s with %s seconds left', test_id, str(seconds_left))
+        LOG.debug('test_id: %s with %s seconds left',
+                  test_id, str(seconds_left))
         time.sleep(CONFIG['report_request_frequency'])
     return None
 
 
-def run_test(test_dir, zone, image, ttype):
+def run_test(test_path):
+    (zone, image, ttype, test_dir) = initialize_test_dir(test_path)
     test_id = os.path.basename(test_dir)
     LOG.info('running test %s' % test_id)
     start_data = {
@@ -110,13 +116,13 @@ def run_test(test_dir, zone, image, ttype):
     tf = pt.Terraform(working_dir=test_dir, var_file='test_vars.tfvars')
     (rc, out, err) = tf.init()
     if rc > 0:
-        results = {'terraform_failed': "init failure: %s" % err }
+        results = {'terraform_failed': "init failure: %s" % err}
         stop_report(test_id, results)
     LOG.info('creating cloud resources for test %s', test_id)
     (rc, out, err) = tf.apply(dir_or_plan=False, skip_plan=True)
     if rc > 0:
         LOG.error('terraform failed for test: %s - %s', test_id, err)
-        results = {'terraform_failed': "apply failure: %s" % err }
+        results = {'terraform_failed': "apply failure: %s" % err}
         stop_report(test_id, results)
     out = tf.output(json=True)
     now = datetime.datetime.utcnow()
@@ -129,7 +135,8 @@ def run_test(test_dir, zone, image, ttype):
     update_report(test_id, update_data)
     results = poll_report(test_id)
     if not results:
-        results = {"test timedout": "(%d seconds)" % int(CONFIG['test_timeout'])}
+        results = {"test timedout": "(%d seconds)" %
+                   int(CONFIG['test_timeout'])}
         stop_report(test_id, results)
     LOG.info('destroying cloud resources for test %s', test_id)
     (rc, out, err) = tf.destroy()
@@ -137,64 +144,69 @@ def run_test(test_dir, zone, image, ttype):
         LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
     else:
         shutil.move(test_dir, os.path.join(COMPLETE_DIR, test_id))
-    
 
-def initialize_test_dir(zone_dir):
-    images = os.listdir(zone_dir)
-    for image in images:
-        image_dir = os.path.join(zone_dir, image)
-        ttypes = os.listdir(image_dir)
-        for ttype in ttypes:
-            ttype_dir = os.path.join(image_dir, ttype)
-            tests = os.listdir(ttype_dir)
-            if tests:
-                dest = os.path.join(RUNNING_DIR, tests[0])
-                shutil.move(os.path.join(ttype_dir, tests[0]), dest)
-                return (image, ttype, dest)
-    return (None, None, None)
+
+def initialize_test_dir(test_path):
+    test_dir = os.path.basename(test_path)
+    test_path_parts = test_path.split(os.path.sep)
+    zone = test_path_parts[(len(test_path_parts) - 4)]
+    image = test_path_parts[(len(test_path_parts) - 3)]
+    ttype = test_path_parts[(len(test_path_parts) - 2)]
+    dest = os.path.join(RUNNING_DIR, test_dir)
+    shutil.move(test_path, dest)
+    return (zone, image, ttype, dest)
+
+
+def build_pool():
+    pool = []
+    zones_dir = os.listdir(QUEUE_DIR)
+    for zone in zones_dir:
+        images_dir = os.path.join(QUEUE_DIR, zone)
+        zone_images = os.listdir(images_dir)
+        for zi in zone_images:
+            tts_dir = os.path.join(images_dir, zi)
+            tts = os.listdir(tts_dir)
+            for tt in tts:
+                tests_dir = os.path.join(tts_dir, tt)
+                tests = os.listdir(tests_dir)
+                for test in tests:
+                    pool.append(os.path.join(tests_dir, test))
+    return pool
+
+
+def requeue_running():
+    for rt in os.listdir(RUNNING_DIR):
+        test_path = os.path.join(RUNNING_DIR, rt)
+        varfile_path = os.path.join(test_path, 'test_vars.json')
+        if os.path.exists(varfile_path):
+            varfile = open(varfile_path, 'r')
+            rvars = json.load(varfile)
+            zone = rvars['zone']
+            template_type = rvars['template_type']
+            image = rvars['tmos_image_name']
+            queue_path = os.path.join(QUEUE_DIR, zone, image, template_type)
+            os.makedirs(queue_path, exist_ok=True)
+            shutil.move(test_path, os.path.join(queue_path, rt))
+        else:
+            LOG.error('invalid test %s found ... removing', test_path)
+            shutil.rmtree(test_path)
 
 
 def runner():
-    tests_to_run = True
-    while tests_to_run:
-        running_threads = []
-        zones = os.listdir(QUEUE_DIR)
-        runners = {}
-        for zone in zones:
-            if zone not in runners:
-                runners[zone] = []  
-            if len(runners[zone]) <= CONFIG['runners_per_zone']:
-                (image, ttype, test_dir) = initialize_test_dir(os.path.join(QUEUE_DIR, zone))
-                if test_dir:
-                    rt = threading.Thread(target=run_test, args=(test_dir, zone, image, ttype,))
-                    test_id = os.path.basename(test_dir)
-                    runners[zone].append({
-                        'id': test_id,
-                        'image': image,
-                        'type': ttype,
-                        'runner': rt
-                    })
-                    LOG.info('creating test thread %s(%d) - %s - %s: %s', zone,  len(runners[zone]), image, ttype, test_id)       
-        for zone in runners:
-            for th in runners[zone]:
-                running_threads.append(th['runner'])
-                th['runner'].start()
-        if running_threads:
-            LOG.debug('there are %d concurrent tests in this round of testing', len(running_threads))
-            for t in running_threads:
-                t.join()
-            LOG.debug('all threads for this round completed')
-        else:
-            LOG.info('there are no scheduled test threads left to run')
-            tests_to_run = False
+    requeue_running()
+    test_pool = build_pool()
+    random.shuffle(test_pool)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=CONFIG['thread_pool_size']) as executor:
+        for test_path in test_pool:
+            executor.submit(run_test, test_path=test_path)
 
 
 def initialize():
     global MY_PID, CONFIG
     MY_PID = os.getpid()
-    os.makedirs(QUEUE_DIR, exist_ok = True)
-    os.makedirs(RUNNING_DIR, exist_ok = True)
-    os.makedirs(COMPLETE_DIR, exist_ok = True)    
+    os.makedirs(QUEUE_DIR, exist_ok=True)
+    os.makedirs(RUNNING_DIR, exist_ok=True)
+    os.makedirs(COMPLETE_DIR, exist_ok=True)
     config_json = ''
     with open(CONFIG_FILE, 'r') as cf:
         config_json = cf.read()
@@ -211,7 +223,7 @@ if __name__ == "__main__":
     runner()
     ERROR_MESSAGE = ''
     ERROR = False
-    
+
     STOP_TIME = time.time()
     DURATION = STOP_TIME - START_TIME
     LOG.debug(
