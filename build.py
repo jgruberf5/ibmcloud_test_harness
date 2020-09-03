@@ -96,7 +96,6 @@ def build_utility():
     total_zones = 0
     indexed_images = {}
     test_per_zone = {}
-    adding_test = True
     for zone in zones:
         if zone in CONFIG['active_zones']:
             LOG.info('creating tests in zone: %s' % zone)
@@ -105,6 +104,7 @@ def build_utility():
             zone_dir = os.path.join(QUEUE_DIR, zone)
             images = os.listdir(zone_dir)
             total_zones = total_zones + 1
+            adding_test = True
             while adding_test:
                 adding_test = False
                 for image in images:
