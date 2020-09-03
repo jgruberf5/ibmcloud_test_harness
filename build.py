@@ -124,7 +124,7 @@ def build_utility():
                         if test_per_zone[zone][base_image_name] <= number_per_zone:
                             test_per_zone[zone][base_image_name] = test_per_zone[zone][base_image_name] + 1
                             adding_test = True
-                            LOG.debug('setting up test for image: %s in %s (%d)', image, zone, number_per_zone)
+                            LOG.debug('setting up test for image: %s in %s (%d)', image, zone, test_per_zone[zone][base_image_name])
                             image_dir = os.path.join(zone_dir, image)
                             size = ''
                             for sstr in CONFIG['profile_selection']:
