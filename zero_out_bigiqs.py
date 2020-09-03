@@ -73,15 +73,13 @@ def get_bigiq_session(host, username, password, timeout):
 
 def get_pool_id(bigiq_session, pool_name):
     pools_url = '%s/utility/licenses?$select=regKey,kind,name,unitsOfMeasure' % \
-            bigiq_session.base_url
+        bigiq_session.base_url
     response = bigiq_session.get(pools_url)
     response.raise_for_status()
     response_json = response.json()
     pools = response_json['items']
     for pool in pools:
         if pool['name'] == pool_name or pool['regKey'] == pool_name:
-            LOG.debug('pool %s', pool)
-            LOG.debug('found pool %s with id %s', pool_name, pool['regKey'])
             return pool['regKey']
     return None
 
@@ -89,7 +87,7 @@ def get_pool_id(bigiq_session, pool_name):
 def get_offerings(bigiq_session, pool_id, search1, search2):
     pools_url = '%s/utility/licenses' % bigiq_session.base_url
     offerings_url = '%s/%s/offerings?$select=id,kind,name' % (
-            pools_url, pool_id)
+        pools_url, pool_id)
     response = bigiq_session.get(offerings_url)
     response.raise_for_status()
     response_json = response.json()
@@ -110,14 +108,14 @@ def delete_all_grants(bigiq_session, pool_id, offering_id):
     members_url = '%s/%s/members' % (offerings_url, offering_id)
     response = bigiq_session.get(members_url)
     if response.status_code != 404:
-       response.raise_for_status()
-       response_json = response.json()
-       members = response_json['items']
-       for member in members:
-           LOG.info('deleting license grant %s', member['id'])
-           member_url = '%s/%s' % (members_url, member['id'])
-           response = bigiq_session.delete(member_url)
-           response.raise_for_status()
+        response.raise_for_status()
+        response_json = response.json()
+        members = response_json['items']
+        for member in members:
+            LOG.info('deleting license grant %s', member['id'])
+            member_url = '%s/%s' % (members_url, member['id'])
+            response = bigiq_session.delete(member_url)
+            response.raise_for_status()
 
 
 def clean():
@@ -133,6 +131,7 @@ def clean():
                     bigiq, pool_id, bigiq_config['license_sku_keyword_1'], bigiq_config['license_sku_keyword_2'])
                 if offering_id:
                     delete_all_grants(bigiq, pool_id, offering_id)
+
 
 def initialize():
     global MY_PID, CONFIG
