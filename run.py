@@ -163,7 +163,7 @@ def runner():
         for zone in zones:
             if zone not in runners:
                 runners[zone] = []  
-            if len(runners[zone]) < CONFIG['runners_per_zone']:
+            if len(runners[zone]) <= CONFIG['runners_per_zone']:
                 (image, ttype, test_dir) = initialize_test_dir(os.path.join(QUEUE_DIR, zone))
                 if test_dir:
                     rt = threading.Thread(target=run_test, args=(test_dir, zone, image, ttype,))
