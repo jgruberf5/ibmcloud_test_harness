@@ -42,6 +42,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 QUEUE_DIR = "%s/queued_tests" % SCRIPT_DIR
 RUNNING_DIR = "%s/running_tests" % SCRIPT_DIR
 COMPLETE_DIR = "%s/completed_tests" % SCRIPT_DIR
+ERRORED_DIR = "%s/errored_tests" % SCRIPT_DIR
 
 CONFIG_FILE = "%s/runners-config.json" % SCRIPT_DIR
 CONFIG = {}
@@ -138,11 +139,19 @@ def run_test(test_path):
         results = {"test timedout": "(%d seconds)" %
                    int(CONFIG['test_timeout'])}
         stop_report(test_id, results)
-    LOG.info('destroying cloud resources for test %s', test_id)
-    (rc, out, err) = tf.destroy()
-    if rc > 0:
-        LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
+        if 'preserve_timed_out_instances' in CONFIG and not CONFIG['preserve_timed_out_instances']:
+            LOG.info('destroying cloud resources for test %s', test_id)
+            (rc, out, err) = tf.destroy()
+            if rc > 0:
+                LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
+        else:
+            os.makedirs(ERRORED_DIR, exist_ok=True)
+            shutil.move(test_dir, os.path.join(ERRORED_DIR, test_id))
     else:
+        LOG.info('destroying cloud resources for completed test %s', test_id)
+        (rc, out, err) = tf.destroy()
+        if rc > 0:
+            LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
         shutil.move(test_dir, os.path.join(COMPLETE_DIR, test_id))
 
 
