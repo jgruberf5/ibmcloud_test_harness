@@ -79,10 +79,10 @@ def get_pool_id(bigiq_session, pool_name):
     response_json = response.json()
     pools = response_json['items']
     for pool in pools:
-        if pool['name'] == pool_name or pool['regkey'] == pool_name:
+        if pool['name'] == pool_name or pool['regKey'] == pool_name:
             LOG.debug('pool %s', pool)
-            LOG.debug('found pool %s with id %s', pool_name, pool['regkey'])
-            return pool['regkey']
+            LOG.debug('found pool %s with id %s', pool_name, pool['regKey'])
+            return pool['regKey']
     return None
 
 
