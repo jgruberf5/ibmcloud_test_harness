@@ -93,13 +93,14 @@ def build_utility():
     number_of_active_zones = len(test_map)
     number_per_zone = CONFIG['utility_pool_tests_per_zone']
     total_tests = 0
+    total_zones = 0
     for zone in zones:
         if zone in CONFIG['active_zones']:
             LOG.info('creating tests in zone: %s' % zone)
             test_map[zone]['test_to_create'] = number_per_zone
             zone_dir = os.path.join(QUEUE_DIR, zone)
             images = os.listdir(zone_dir)
-            
+            total_zones = total_zones + 1
             LOG.info('each images (there are %d) will be tested %d times', len(images), number_per_zone)
             while test_map[zone]['test_to_create'] > 0:
                 for image in images:
@@ -227,7 +228,7 @@ def build_utility():
                                 vtf.write(var_tf_content)
                             total_tests = total_tests + 1
                         test_map[zone]['test_to_create'] = test_map[zone]['test_to_create'] - 1
-    LOG.info("%d total tests created", total_tests)
+    LOG.info("%d total tests created in %d zones", total_tests, total_zones)
 
 def build_byol():
     zone_resources = {}
