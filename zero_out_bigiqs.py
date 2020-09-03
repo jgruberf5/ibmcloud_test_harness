@@ -114,7 +114,7 @@ def delete_all_grants(bigiq_session, pool_id, offering_id):
        response_json = response.json()
        members = response_json['items']
        for member in members:
-           LOG.info('deleteing grant %s', member['id'])
+           LOG.info('deleting grant %s', member['id'])
            member_url = '%s/%s' % (members_url, member['id'])
            response = bigiq_session.delete(member_url)
            response.raise_for_status()
