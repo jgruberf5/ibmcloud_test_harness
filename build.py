@@ -98,7 +98,7 @@ def build_utility():
             test_map[zone]['test_to_create'] = number_per_zone
             zone_dir = os.path.join(QUEUE_DIR, zone)
             images = os.listdir(zone_dir)
-            LOG.info('each images (there are %d) will be tested %d times', (len(images), number_per_zone))
+            LOG.info('each images (there are %d) will be tested %d times', len(images), number_per_zone)
             while test_map[zone]['test_to_create'] > 0:
                 for image in images:
                     image_eligible = False
