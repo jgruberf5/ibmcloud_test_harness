@@ -153,6 +153,8 @@ def build_utility():
                                 var_tf_content = "%s = \"%s\"\n" % (
                                     'test_type', temp_type)
                                 var_to_write = {'test_type': temp_type}
+                                var_to_write['zone'] = zone
+                                var_to_write['template_type'] = temp_type
                                 var_to_write['license_type'] = "utilitypool"
                                 var_tf_content += "license_type = \"utilitypool\"\n"
                                 var_to_write['license_host'] = CONFIG['zone_license_hosts'][zone]['license_host']
