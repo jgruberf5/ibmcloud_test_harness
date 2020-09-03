@@ -26,7 +26,7 @@ import json
 import time
 
 
-LOG = logging.getLogger('ibmcloud_test_harness_run')
+LOG = logging.getLogger('ibmcloud_test_harness_zero_bigiq')
 LOG.setLevel(logging.DEBUG)
 FORMATTER = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
