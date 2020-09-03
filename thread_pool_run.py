@@ -27,6 +27,7 @@ import concurrent.futures
 import threading
 import shutil
 import python_terraform as pt
+import random
 
 LOG = logging.getLogger('ibmcloud_test_harness_run')
 LOG.setLevel(logging.DEBUG)
@@ -172,6 +173,7 @@ def build_pool():
 
 def runner():
     test_pool = build_pool()
+    random.shuffle(test_pool)
     with concurrent.futures.ThreadPoolExecutor(max_workers=CONFIG['thread_pool_size']) as executor:
         for test_path in test_pool:
             (zone, image, ttype, test_dir) = initialize_test_dir(test_path)
