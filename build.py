@@ -119,7 +119,7 @@ def build_utility():
                             # LOG.debug('creating a test: %s - %s - %s', zone, image, temp_type)
                             test_id = str(uuid.uuid4())
                             test_dir = os.path.join(temp_dir, test_id)
-                            LOG.info('creating test: %s' % test_dir)
+                            # LOG.info('creating test: %s' % test_dir)
                             os.mkdir(test_dir)
                             test_archive = tarfile.open(template)
                             test_archive.extractall(test_dir)
