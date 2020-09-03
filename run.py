@@ -145,14 +145,27 @@ def run_test(test_path):
             if rc > 0:
                 LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
         else:
+            LOG.error('preserving instanse for test: %s for debug', test_id)
             os.makedirs(ERRORED_DIR, exist_ok=True)
             shutil.move(test_dir, os.path.join(ERRORED_DIR, test_id))
     else:
-        LOG.info('destroying cloud resources for completed test %s', test_id)
-        (rc, out, err) = tf.destroy()
-        if rc > 0:
-            LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
-        shutil.move(test_dir, os.path.join(COMPLETE_DIR, test_id))
+        if results['results']['status'] == "ERROR":
+            if 'preserve_errored_instances' in CONFIG and not CONFIG['preserve_errored_instances']:
+                LOG.error('destroying cloud resources for errored test %s', test_id)
+                (rc, out, err) = tf.destroy()
+                if rc > 0:
+                    LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
+                shutil.move(test_dir, os.path.join(COMPLETE_DIR, test_id))
+            else:
+                LOG.error('preserving instanse for test: %s for debug', test_id)
+                os.makedirs(ERRORED_DIR, exist_ok=True)
+                shutil.move(test_dir, os.path.join(ERRORED_DIR, test_id))
+        else:
+            LOG.info('destroying cloud resources for completed test %s', test_id)
+            (rc, out, err) = tf.destroy()
+            if rc > 0:
+                LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
+            shutil.move(test_dir, os.path.join(COMPLETE_DIR, test_id))
 
 
 def initialize_test_dir(test_path):
