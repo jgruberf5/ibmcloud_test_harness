@@ -46,11 +46,10 @@ COMPLETE_DIR = "%s/completed_tests" % SCRIPT_DIR
 CONFIG_FILE = "%s/runners-config.json" % SCRIPT_DIR
 CONFIG = {}
 
-POOLED_JOBS = []
-
 MY_PID = None
 
-def check_pid(pid):        
+
+def check_pid(pid):
     try:
         os.kill(pid, 0)
     except OSError:
@@ -72,7 +71,7 @@ def update_report(test_id, update_data):
         'Content-Type': 'application/json'
     }
     requests.put("%s/report/%s" % (CONFIG['report_service_base_url'], test_id),
-                  headers=headers, data=json.dumps(update_data))
+                 headers=headers, data=json.dumps(update_data))
 
 
 def stop_report(test_id, results):
@@ -90,19 +89,22 @@ def poll_report(test_id):
         headers = {
             'Content-Type': 'application/json'
         }
-        response = requests.get("%s/report/%s" % (base_url, test_id), headers=headers)
+        response = requests.get("%s/report/%s" %
+                                (base_url, test_id), headers=headers)
         if response.status_code < 400:
             data = response.json()
             if data['duration'] > 0:
                 LOG.info('test run %s completed', test_id)
                 return data
         seconds_left = int(end_time - time.time())
-        LOG.debug('test_id: %s with %s seconds left', test_id, str(seconds_left))
+        LOG.debug('test_id: %s with %s seconds left',
+                  test_id, str(seconds_left))
         time.sleep(CONFIG['report_request_frequency'])
     return None
 
 
-def run_test(test_dir, zone, image, ttype):
+def run_test(test_path):
+    (zone, image, ttype, test_dir) = initialize_test_dir(test_path)
     test_id = os.path.basename(test_dir)
     LOG.info('running test %s' % test_id)
     start_data = {
@@ -114,13 +116,13 @@ def run_test(test_dir, zone, image, ttype):
     tf = pt.Terraform(working_dir=test_dir, var_file='test_vars.tfvars')
     (rc, out, err) = tf.init()
     if rc > 0:
-        results = {'terraform_failed': "init failure: %s" % err }
+        results = {'terraform_failed': "init failure: %s" % err}
         stop_report(test_id, results)
     LOG.info('creating cloud resources for test %s', test_id)
     (rc, out, err) = tf.apply(dir_or_plan=False, skip_plan=True)
     if rc > 0:
         LOG.error('terraform failed for test: %s - %s', test_id, err)
-        results = {'terraform_failed': "apply failure: %s" % err }
+        results = {'terraform_failed': "apply failure: %s" % err}
         stop_report(test_id, results)
     out = tf.output(json=True)
     now = datetime.datetime.utcnow()
@@ -133,7 +135,8 @@ def run_test(test_dir, zone, image, ttype):
     update_report(test_id, update_data)
     results = poll_report(test_id)
     if not results:
-        results = {"test timedout": "(%d seconds)" % int(CONFIG['test_timeout'])}
+        results = {"test timedout": "(%d seconds)" %
+                   int(CONFIG['test_timeout'])}
         stop_report(test_id, results)
     LOG.info('destroying cloud resources for test %s', test_id)
     (rc, out, err) = tf.destroy()
@@ -141,7 +144,7 @@ def run_test(test_dir, zone, image, ttype):
         LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
     else:
         shutil.move(test_dir, os.path.join(COMPLETE_DIR, test_id))
-    
+
 
 def initialize_test_dir(test_path):
     test_dir = os.path.basename(test_path)
@@ -176,16 +179,15 @@ def runner():
     random.shuffle(test_pool)
     with concurrent.futures.ThreadPoolExecutor(max_workers=CONFIG['thread_pool_size']) as executor:
         for test_path in test_pool:
-            (zone, image, ttype, test_dir) = initialize_test_dir(test_path)
-            executor.submit(run_test, test_dir=test_dir, zone=zone, image=image, ttype=ttype)
+            executor.submit(run_test, test_path=test_path)
 
 
 def initialize():
     global MY_PID, CONFIG
     MY_PID = os.getpid()
-    os.makedirs(QUEUE_DIR, exist_ok = True)
-    os.makedirs(RUNNING_DIR, exist_ok = True)
-    os.makedirs(COMPLETE_DIR, exist_ok = True)    
+    os.makedirs(QUEUE_DIR, exist_ok=True)
+    os.makedirs(RUNNING_DIR, exist_ok=True)
+    os.makedirs(COMPLETE_DIR, exist_ok=True)
     config_json = ''
     with open(CONFIG_FILE, 'r') as cf:
         config_json = cf.read()
@@ -202,7 +204,7 @@ if __name__ == "__main__":
     runner()
     ERROR_MESSAGE = ''
     ERROR = False
-    
+
     STOP_TIME = time.time()
     DURATION = STOP_TIME - START_TIME
     LOG.debug(
