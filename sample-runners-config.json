@@ -1,5 +1,6 @@
 {
-    "runners_per_zone": 1, 
+    "runners_per_zone": 1,
+    "thread_pool_size": 20,
     "report_service_base_url": "http://[REPORT_SERVER_IP_HERE]",
     "report_request_frequency": 30,
     "test_timeout": 1800
