@@ -113,12 +113,14 @@ def run_test(test_path):
         'image_name': image,
         'type': ttype
     }
-    start_report(test_id, start_data)
     tf = pt.Terraform(working_dir=test_dir, var_file='test_vars.tfvars')
+    LOG.info('initializing provider resources for %s', test_id)
     (rc, out, err) = tf.init()
+    start_report(test_id, start_data)
     if rc > 0:
         results = {'terraform_failed': "init failure: %s" % err}
         stop_report(test_id, results)
+        return
     LOG.info('creating cloud resources for test %s', test_id)
     (rc, out, err) = tf.apply(dir_or_plan=False, skip_plan=True)
     if rc > 0:
