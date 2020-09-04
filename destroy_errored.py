@@ -29,7 +29,7 @@ import shutil
 import python_terraform as pt
 import random
 
-LOG = logging.getLogger('ibmcloud_test_harness_destroy_running')
+LOG = logging.getLogger('ibmcloud_test_harness_destroy_errored')
 LOG.setLevel(logging.DEBUG)
 FORMATTER = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -59,18 +59,9 @@ def check_pid(pid):
         return True
 
 
-def stop_report(test_id, results):
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    requests.post("%s/stop/%s" % (CONFIG['report_service_base_url'], test_id),
-                  headers=headers, data=json.dumps(results))
-
-
 def destroy_test(test_path):
     test_id = os.path.basename(test_path)
-    results = {"test_aborted": "forced destroyed"}
-    stop_report(test_id, results)
+    results = {"test_errored": "forced destroyed"}
     tf = pt.Terraform(working_dir=test_path, var_file='test_vars.tfvars')
     (rc, out, err) = tf.init()
     if rc > 0:
@@ -91,8 +82,8 @@ def destroy_test(test_path):
 
 def build_pool():
     pool = []
-    for rt in os.listdir(RUNNING_DIR):
-        pool.append(os.path.join(RUNNING_DIR, rt))
+    for rt in os.listdir(ERRORED_DIR):
+        pool.append(os.path.join(ERRORED_DIR, rt))
     return pool
 
 
@@ -108,7 +99,7 @@ def initialize():
     global MY_PID, CONFIG
     MY_PID = os.getpid()
     os.makedirs(QUEUE_DIR, exist_ok=True)
-    os.makedirs(RUNNING_DIR, exist_ok=True)
+    os.makedirs(ERRORED_DIR, exist_ok=True)
     os.makedirs(COMPLETE_DIR, exist_ok=True)
     config_json = ''
     with open(CONFIG_FILE, 'r') as cf:

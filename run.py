@@ -139,33 +139,37 @@ def run_test(test_path):
         results = {"test timedout": "(%d seconds)" %
                    int(CONFIG['test_timeout'])}
         stop_report(test_id, results)
-        if 'preserve_timed_out_instances' in CONFIG and not CONFIG['preserve_timed_out_instances']:
+        if 'preserve_timed_out_instances' in CONFIG and CONFIG['preserve_timed_out_instances']:
+            LOG.error('preserving timedout instance for test: %s for debug', test_id)
+            os.makedirs(ERRORED_DIR, exist_ok=True)
+            shutil.move(test_dir, os.path.join(ERRORED_DIR, test_id))        
+        else:
             LOG.info('destroying cloud resources for test %s', test_id)
             (rc, out, err) = tf.destroy()
             if rc > 0:
                 LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
-        else:
-            LOG.error('preserving instanse for test: %s for debug', test_id)
-            os.makedirs(ERRORED_DIR, exist_ok=True)
-            shutil.move(test_dir, os.path.join(ERRORED_DIR, test_id))
+            shutil.rmtree(test_dir)
     else:
         if results['results']['status'] == "ERROR":
-            if 'preserve_errored_instances' in CONFIG and not CONFIG['preserve_errored_instances']:
+            if 'preserve_errored_instances' in CONFIG and CONFIG['preserve_errored_instances']:
+                LOG.error('preserving errored instance for test: %s for debug', test_id)
+                os.makedirs(ERRORED_DIR, exist_ok=True)
+                shutil.move(test_dir, os.path.join(ERRORED_DIR, test_id))            
+            else:
                 LOG.error('destroying cloud resources for errored test %s', test_id)
                 (rc, out, err) = tf.destroy()
                 if rc > 0:
                     LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
-                shutil.move(test_dir, os.path.join(COMPLETE_DIR, test_id))
-            else:
-                LOG.error('preserving instanse for test: %s for debug', test_id)
-                os.makedirs(ERRORED_DIR, exist_ok=True)
-                shutil.move(test_dir, os.path.join(ERRORED_DIR, test_id))
+                shutil.rmtree(test_dir)
         else:
             LOG.info('destroying cloud resources for completed test %s', test_id)
             (rc, out, err) = tf.destroy()
             if rc > 0:
                 LOG.error('could not destroy test: %s: %s. Manually fix.', test_id, err)
-            shutil.move(test_dir, os.path.join(COMPLETE_DIR, test_id))
+            if 'keep_completed_state' in CONFIG and CONFIG['keep_completed_state']:
+                shutil.move(test_dir, os.path.join(COMPLETE_DIR, test_id))
+            else:
+                shutil.rmtree(test_dir)
 
 
 def initialize_test_dir(test_path):
