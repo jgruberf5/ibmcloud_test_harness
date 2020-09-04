@@ -72,13 +72,16 @@ def destroy_test(test_path):
         if rc > 0:
             LOG.error(
                 'could not destroy test: %s: %s. Manually fix.', test_id, err)
+        else:
+            shutil.rmtree(test_path)
     else:
         LOG.info('destroying cloud resources for invalid test %s', test_id)
         (rc, out, err) = tf.destroy()
         if rc > 0:
             LOG.error(
                 'could not destroy test: %s: %s. Manually fix.', test_id, err)
-    shutil.rmtree(test_path)
+        else:
+            shutil.rmtree(test_path)
 
 
 def build_pool():
