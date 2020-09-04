@@ -71,9 +71,10 @@ def destroy_test(test_path):
     LOG.info("destroying %s", test_path)
     test_id = os.path.basename(test_path)
     results = {"test_aborted": "forced destroyed"}
-    stop_report(test_id, results)
+    # stop_report(test_id, results)
     tf = pt.Terraform(working_dir=test_path, var_file='test_vars.tfvars')
-    (rc, out, err) = tf.init()
+    if not os.path.exists(os.path.join(test_path, '.terraform')):
+        (rc, out, err) = tf.init()
     results = {'terraform_failed': "init failure: %s" % err}
     LOG.info('destroying cloud resources for test %s', test_id)
     (rc, out, err) = tf.destroy()
