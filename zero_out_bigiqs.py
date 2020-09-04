@@ -153,8 +153,11 @@ if __name__ == "__main__":
     KEEP_CLEAN = os.getenv('KEEP_CLEAN', '0')
     if KEEP_CLEAN == '1' or KEEP_CLEAN.lower() == 'true':
         while True:
-            clean()
-            time.sleep(300)
+            try:
+                clean()
+                time.sleep(300)
+            except Exception as ex:
+                LOG.error('exception releasing grants: %s', ex)
     else:
         clean()
     STOP_TIME = time.time()
