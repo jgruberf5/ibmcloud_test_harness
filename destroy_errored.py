@@ -65,23 +65,14 @@ def destroy_test(test_path):
     results = {"test_errored": "forced destroyed"}
     tf = pt.Terraform(working_dir=test_path, var_file='test_vars.tfvars')
     (rc, out, err) = tf.init()
+    results = {'terraform_failed': "init failure: %s" % err}
+    LOG.info('destroying cloud resources for test %s', test_id)
+    (rc, out, err) = tf.destroy()
     if rc > 0:
-        results = {'terraform_failed': "init failure: %s" % err}
-        LOG.info('destroying cloud resources for test %s', test_id)
-        (rc, out, err) = tf.destroy()
-        if rc > 0:
-            LOG.error(
-                'could not destroy test: %s: %s. Manually fix.', test_id, err)
-        else:
-            shutil.rmtree(test_path)
+        LOG.error(
+            'could not destroy test: %s: %s. Manually fix.', test_id, err)
     else:
-        LOG.info('destroying cloud resources for invalid test %s', test_id)
-        (rc, out, err) = tf.destroy()
-        if rc > 0:
-            LOG.error(
-                'could not destroy test: %s: %s. Manually fix.', test_id, err)
-        else:
-            shutil.rmtree(test_path)
+        shutil.rmtree(test_path)
 
 
 def build_pool():
