@@ -43,6 +43,7 @@ QUEUE_DIR = "%s/queued_tests" % SCRIPT_DIR
 RUNNING_DIR = "%s/running_tests" % SCRIPT_DIR
 COMPLETE_DIR = "%s/completed_tests" % SCRIPT_DIR
 ERRORED_DIR = "%s/errored_tests" % SCRIPT_DIR
+RUNNING_TEST_IDS = []
 
 CONFIG_FILE = "%s/runners-config.json" % SCRIPT_DIR
 CONFIG = {}
@@ -88,7 +89,12 @@ def destroy_test(test_path):
 def build_pool():
     pool = []
     for rt in os.listdir(RUNNING_DIR):
-        pool.append(os.path.join(RUNNING_DIR, rt))
+        if RUNNING_TEST_IDS:
+            for id in RUNNING_TEST_IDS:
+                if id.strip() == rt:
+                    pool.append(os.path.join(RUNNING_DIR, rt))
+        else:
+            pool.append(os.path.join(RUNNING_DIR, rt))
     return pool
 
 
@@ -101,11 +107,14 @@ def runner():
 
 
 def initialize():
-    global MY_PID, CONFIG
+    global MY_PID, CONFIG, RUNNING_TEST_IDS
     MY_PID = os.getpid()
     os.makedirs(QUEUE_DIR, exist_ok=True)
     os.makedirs(RUNNING_DIR, exist_ok=True)
     os.makedirs(COMPLETE_DIR, exist_ok=True)
+    filter_ids = os.getenv(RUNNING_TEST_IDS, "")
+    if filter_ids:
+        RUNNING_TEST_IDS = filter_ids.split(',')
     config_json = ''
     with open(CONFIG_FILE, 'r') as cf:
         config_json = cf.read()
