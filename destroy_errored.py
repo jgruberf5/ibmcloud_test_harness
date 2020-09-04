@@ -60,6 +60,7 @@ def check_pid(pid):
 
 
 def destroy_test(test_path):
+    LOG.info("destroying %s", test_path)
     test_id = os.path.basename(test_path)
     results = {"test_errored": "forced destroyed"}
     tf = pt.Terraform(working_dir=test_path, var_file='test_vars.tfvars')
